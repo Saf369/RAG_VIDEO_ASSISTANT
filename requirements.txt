@@ -7,23 +7,23 @@ pydub==0.25.1
 ffmpeg-python==0.2.0
 
 # --- Transcription (Sarvam API - cloud-based, no local model needed) ---
-requests
+requests==2.32.3
 
 # --- Translation (Hindi -> English) ---
 deep-translator==1.11.4
 langdetect==1.0.9
 
 # --- LangChain (LCEL) + Mistral ---
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-community>=0.3.0
-langchain-mistralai
+langchain==0.3.25
+langchain-core==0.3.63
+langchain-community==0.3.25
+langchain-mistralai==0.2.10
 mistralai>=1.0.0
 
 # --- RAG: vector store + embeddings ---
 chromadb==1.0.12
 langchain-huggingface==0.2.0
-sentence-transformers==4.1.0
+sentence-transformers==3.3.1
 
 # --- Export: PDF / TXT ---
 fpdf2==2.8.3
@@ -32,3 +32,4 @@ reportlab==4.4.0
 # --- Utilities ---
 python-dotenv==1.1.0
 setuptools
+numpy>=1.26.0,<2.0.0
