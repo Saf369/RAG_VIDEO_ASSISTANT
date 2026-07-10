@@ -35,7 +35,7 @@ def convert_to_wav(audio_path:str)->str:
     return wav_path
 
 #print(convert_to_wav(data))
-def chunk_audio(audio_path:str,chunk_length_ms:int=600000)->list[str]:
+def chunk_audio(audio_path:str,chunk_length_ms:int=25000)->list[str]:
     audio=AudioSegment.from_wav(audio_path)
     chunks=[]
     filename=os.path.basename(audio_path)
@@ -47,7 +47,8 @@ def chunk_audio(audio_path:str,chunk_length_ms:int=600000)->list[str]:
     return chunks
 
 if __name__ == "__main__":
-    data = download_audio_from_youtube("https://youtu.be/kovGit0HIxE?si=Sl9uwji10sRElGDk")            
+    url = "https://youtu.be/CiqEPPExPdk"
+    data = download_audio_from_youtube(url)            
     print(chunk_audio(convert_to_wav(data)))
 
 
