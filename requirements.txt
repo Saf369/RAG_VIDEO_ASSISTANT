@@ -6,10 +6,8 @@ yt-dlp
 pydub==0.25.1
 ffmpeg-python==0.2.0
 
-# --- Local transcription (Whisper) ---
-openai-whisper==20240930
-torch==2.6.0
-torchaudio==2.6.0
+# --- Transcription (Sarvam API - cloud-based, no local model needed) ---
+requests
 
 # --- Translation (Hindi -> English) ---
 deep-translator==1.11.4
