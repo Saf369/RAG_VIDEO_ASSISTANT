@@ -31,6 +31,4 @@ reportlab==4.4.0
 
 # --- Utilities ---
 python-dotenv==1.1.0
-tiktoken==0.9.0
-numpy<2.0.0
 setuptools
