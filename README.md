@@ -13,6 +13,8 @@
 - **AI Summarization** — Map-reduce summarization with Mistral LLM
 - **Insight Extraction** — Extracts actionable items, discussion points, and open questions
 - **RAG Q&A** — Ask follow-up questions answered directly from the transcript via ChromaDB vector search
+- **PDF Export** — Generates a structured report of the transcript, summary, and insights via ReportLab/fpdf2
+- **Multi-format Deployment** — Docker, Render/Railway/Fly.io, and Heroku support out of the box
 
 ---
 
@@ -59,13 +61,49 @@ heroku buildpacks:add --index 1 heroku-community/apt
 git push heroku main
 ```
 
-> **Note:** For Heroku, add the `heroku-community/apt` buildpack so `packages.txt` is respected. Since Heroku doesn't support custom Docker JS runtimes the same way, YouTube downloads may hit bot-detection more often on this platform — Docker-based hosts are recommended instead.
+> **Note:** Add the `heroku-community/apt` buildpack so `packages.txt` is respected. Heroku doesn't support custom JS runtimes as cleanly as Docker-based hosts, so YouTube downloads may hit bot-detection more often there.
+
+---
+
+## ⚠️ Known Deployment Challenges
+
+This project hit several real-world issues getting YouTube downloads working reliably in production. Documenting them here in case you run into the same things:
+
+### 1. `HTTP Error 403: Forbidden` on Streamlit Community Cloud
+**Cause:** As of early 2026, YouTube requires solving a JavaScript signature challenge before it will serve audio/video streams. `yt-dlp` needs an external JS runtime (Deno) to do this, and Streamlit Community Cloud's environment doesn't provide one — its `packages.txt` only supports `apt-get` installs, and Deno isn't in Debian's default repos.
+**Fix:** Moved deployment to Docker, where the `Dockerfile` installs Deno directly:
+```dockerfile
+RUN curl -fsSL https://deno.land/install.sh | sh
+ENV PATH="/root/.deno/bin:$PATH"
+```
+
+### 2. `HTTP Error 429: Too Many Requests`
+**Cause:** YouTube rate-limits repeated requests from the same IP, especially during active development/testing against the same video.
+**Fix:** Mostly transient — retrying after a short delay usually resolves it. A retry-with-backoff wrapper around the `yt-dlp` download call is recommended for production use so users aren't hit with a hard failure on a temporary rate limit.
+
+### 3. `Sign in to confirm you're not a bot`
+**Cause:** YouTube's bot-detection layer, sometimes triggered after repeated requests or from a "less trusted" IP range (e.g. cloud/datacenter IPs used by hosting platforms).
+**Fix:** Added optional cookie-based authentication support:
+```python
+if os.path.exists("cookies.txt"):
+    ydl_opts["cookiefile"] = "cookies.txt"
+```
+Cookies are exported from a logged-in browser session and passed to `yt-dlp` — see the **YouTube Authentication** section below. In testing, this wasn't always necessary (the Deno fix alone resolved most cases), but it's kept as a fallback since YouTube's bot-detection behavior is inconsistent.
+
+### 4. Render/Railway port binding
+**Cause:** These platforms inject a dynamic `$PORT` environment variable at runtime rather than using a fixed port; hardcoding `--server.port=8501` in the `Dockerfile` causes health checks to fail.
+**Fix:** `CMD` now binds dynamically:
+```dockerfile
+CMD sh -c "streamlit run app.py --server.port=$PORT --server.address=0.0.0.0"
+```
+
+> **Takeaway:** YouTube's anti-bot measures change frequently and `yt-dlp` patches in response — treat this as an evolving problem, not a one-time fix. Keep `yt-dlp` updated and expect to revisit cookies/JS-runtime handling periodically.
 
 ---
 
 ## 🔐 YouTube Authentication (Cookies)
 
-YouTube occasionally blocks automated downloads with a **"Sign in to confirm you're not a bot"** error. If this happens:
+If you hit the **"Sign in to confirm you're not a bot"** error:
 
 1. Install a browser extension like **"Get cookies.txt LOCALLY"** and export your YouTube cookies (while logged in) to `cookies.txt`
 2. Locally, mount the file into the container:
@@ -74,7 +112,7 @@ YouTube occasionally blocks automated downloads with a **"Sign in to confirm you
      -v "$(pwd)/cookies.txt:/app/cookies.txt" \
      ai-video-assistant
    ```
-3. For hosted deployments (Render, etc.), base64-encode the file and store it as an environment variable:
+3. For hosted deployments, base64-encode the file and store it as an environment variable:
    ```bash
    base64 -w 0 cookies.txt
    ```
