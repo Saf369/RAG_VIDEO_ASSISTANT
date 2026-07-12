@@ -1,12 +1,10 @@
-# 🎬 Personalized Meeting Assistant
+# 🎬 AI Video Assistant
 
-> Your intelligent companion for meetings and video content. Transcribe, summarize, and query any meeting recording or YouTube video with AI — powered by Sarvam STT, Mistral LLM, and ChromaDB RAG.
+> Transcribe, summarize, and query any YouTube video with AI — powered by Sarvam STT, Mistral LLM, and ChromaDB RAG.
 
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.45-FF4B4B?logo=streamlit)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green)
-
-**🔴 Live Demo:** [https://saf369-rag-video-assistant-app-zijmva.streamlit.app/](https://saf369-rag-video-assistant-app-zijmva.streamlit.app/)
 
 ## ✨ Features
 
