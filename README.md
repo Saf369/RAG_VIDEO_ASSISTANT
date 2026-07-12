@@ -6,10 +6,6 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**🔗 Live Demo:** [saf369-rag-video-assistant-app-zijmva.streamlit.app](https://saf369-rag-video-assistant-app-zijmva.streamlit.app/)
-
----
-
 ## ✨ Features
 
 - **YouTube Audio Download** — Extracts audio from any YouTube video via `yt-dlp`
@@ -22,24 +18,9 @@
 
 ## 🚀 Deployment
 
-### Option 1: Streamlit Community Cloud (Recommended)
+### Option 1: Docker (Recommended)
 
-1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Set the **main file** to `app.py`
-5. Add your secrets in **Settings → Secrets**:
-   ```toml
-   MISTRAL_API_KEY = "your-mistral-api-key"
-   WHISPER_MODEL = "small"
-   SARVAM_API = "your-sarvam-api-key"
-   SARVAM_STT_MODEL = "saaras:v3"
-   ```
-6. Deploy!
-
-> The `packages.txt` file ensures `ffmpeg` is installed automatically.
-
-### Option 2: Docker
+This app requires a JS runtime (Deno) for `yt-dlp` to bypass YouTube's bot-detection challenges, which isn't available on platforms like Streamlit Community Cloud. Docker gives full control over the environment.
 
 ```bash
 # Build the image
@@ -51,27 +32,55 @@ docker run -p 8501:8501 \
   -e SARVAM_API="your-key" \
   -e SARVAM_STT_MODEL="saaras:v3" \
   -e WHISPER_MODEL="small" \
+  -e PORT="8501" \
   ai-video-assistant
 ```
 
 Open [http://localhost:8501](http://localhost:8501)
 
-### Option 3: Heroku / Render / Railway
+### Option 2: Render / Railway / Fly.io
 
-These platforms use the `Procfile` and `runtime.txt`:
+These platforms support deploying directly from the `Dockerfile`:
+
+1. Push this repo to GitHub
+2. Create a new Web Service and connect your repo
+3. Select **Docker** as the environment (not the auto-detected Python buildpack)
+4. Add the required environment variables in the dashboard (see below)
+5. Deploy — the platform will inject a `$PORT` value automatically, which the `Dockerfile`'s `CMD` binds to
+
+### Option 3: Heroku
+
+Uses the `Procfile` and `runtime.txt`:
 
 ```bash
-# Heroku
 heroku create my-video-assistant
 heroku config:set MISTRAL_API_KEY=your-key SARVAM_API=your-key SARVAM_STT_MODEL=saaras:v3
 heroku buildpacks:add --index 1 heroku-community/apt
 git push heroku main
-
-# Render / Railway
-# Just connect your GitHub repo — they auto-detect the Procfile
 ```
 
-> **Note:** For Heroku, add the `heroku-community/apt` buildpack so `packages.txt` is respected.
+> **Note:** For Heroku, add the `heroku-community/apt` buildpack so `packages.txt` is respected. Since Heroku doesn't support custom Docker JS runtimes the same way, YouTube downloads may hit bot-detection more often on this platform — Docker-based hosts are recommended instead.
+
+---
+
+## 🔐 YouTube Authentication (Cookies)
+
+YouTube occasionally blocks automated downloads with a **"Sign in to confirm you're not a bot"** error. If this happens:
+
+1. Install a browser extension like **"Get cookies.txt LOCALLY"** and export your YouTube cookies (while logged in) to `cookies.txt`
+2. Locally, mount the file into the container:
+   ```bash
+   docker run -p 8501:8501 --env-file .env -e PORT=8501 \
+     -v "$(pwd)/cookies.txt:/app/cookies.txt" \
+     ai-video-assistant
+   ```
+3. For hosted deployments (Render, etc.), base64-encode the file and store it as an environment variable:
+   ```bash
+   base64 -w 0 cookies.txt
+   ```
+   Set the output as `YT_COOKIES_B64` in your platform's environment variables. The `Dockerfile` decodes this into `cookies.txt` automatically at container startup.
+
+> **Note:** Cookies expire periodically (typically weeks to a couple months) and will need to be re-exported if this error resurfaces.
 
 ---
 
@@ -102,18 +111,21 @@ streamlit run app.py
 
 - Python 3.11+
 - `ffmpeg` installed on your system (`sudo apt install ffmpeg` on Ubuntu)
+- For reliable YouTube downloads: a JS runtime such as [Deno](https://deno.land) on your PATH (the `Dockerfile` installs this automatically for containerized runs)
 
 ---
 
 ## 🔑 Environment Variables
 
-| Variable           | Required | Description                                |
-| ------------------ | -------- | ------------------------------------------- |
-| `MISTRAL_API_KEY`  | ✅       | Mistral AI API key for LLM calls            |
-| `SARVAM_API`       | ✅       | Sarvam AI API key for speech-to-text        |
-| `SARVAM_STT_MODEL` | ✅       | Sarvam STT model name (e.g. `saaras:v3`)    |
-| `WHISPER_MODEL`    | ❌       | Whisper model size (default: `small`)       |
-| `CHROMA_DIR`       | ❌       | ChromaDB storage path (default: `vector_db`)|
+| Variable           | Required | Description                                               |
+| ------------------ | -------- | ----------------------------------------------------------- |
+| `MISTRAL_API_KEY`  | ✅       | Mistral AI API key for LLM calls                             |
+| `SARVAM_API`       | ✅       | Sarvam AI API key for speech-to-text                         |
+| `SARVAM_STT_MODEL` | ✅       | Sarvam STT model name (e.g. `saaras:v3`)                      |
+| `WHISPER_MODEL`    | ❌       | Whisper model size (default: `small`)                        |
+| `CHROMA_DIR`       | ❌       | ChromaDB storage path (default: `vector_db`)                  |
+| `PORT`             | ❌       | Port to bind Streamlit to (auto-set by most hosts)             |
+| `YT_COOKIES_B64`   | ❌       | Base64-encoded YouTube cookies (see Authentication above)       |
 
 ---
 
@@ -135,10 +147,10 @@ AI_RAG_prompteng/
 │   └── config.toml        # Streamlit theme & server config
 ├── requirements.txt       # Python dependencies
 ├── packages.txt           # System dependencies (for Streamlit Cloud)
-├── Dockerfile              # Container deployment
+├── Dockerfile              # Container deployment (installs Deno, ffmpeg)
 ├── Procfile                # Heroku/Render/Railway
 ├── runtime.txt              # Python version for PaaS platforms
-└── .env.example             # Environment variable template
+└── .env.example              # Environment variable template
 ```
 
 ---
