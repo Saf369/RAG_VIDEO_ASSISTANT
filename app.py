@@ -1,9 +1,23 @@
+try:
+    import torch
+    torch.classes.__path__ = []
+except ImportError:
+    pass
+
 import streamlit as st
 import os
 import time
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Bridge Streamlit Cloud secrets → os.environ (so downstream modules work unchanged)
+try:
+    for key in st.secrets:
+        if key not in os.environ:
+            os.environ[key] = str(st.secrets[key])
+except Exception:
+    pass  # Not on Streamlit Cloud, .env already loaded
 
 from utils.audio_processor import download_audio_from_youtube, convert_to_wav, chunk_audio
 from core.transcriber import transcribe_all

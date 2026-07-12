@@ -8,10 +8,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI
 from dotenv import load_dotenv
 import os
+import shutil
 
 load_dotenv()
 
-CHROMA_DIR = "vector_db"
+CHROMA_DIR = os.getenv("CHROMA_DIR", "vector_db")
 COLLECTION_NAME = "meeting_transcription"
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -22,7 +23,11 @@ def get_embed() -> HuggingFaceEmbeddings:
 
 
 def build_vector_store(transcript: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> Chroma:
-    """Splits a transcript and stores/updates it in ChromaDB."""
+    """Splits a transcript and stores/updates it in ChromaDB.
+    
+    Always starts fresh to avoid incompatible/corrupted SQLite DB issues
+    across ChromaDB versions.
+    """
     embedding = get_embed()
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
@@ -34,21 +39,16 @@ def build_vector_store(transcript: str, chunk_size: int = 1000, chunk_overlap: i
         for i, chunk in enumerate(splitter.split_text(transcript))
     ]
 
-    if not os.path.exists(CHROMA_DIR):
-        return Chroma.from_documents(
-            documents=docs,
-            collection_name=COLLECTION_NAME,
-            embedding=embedding,          # fixed: was embedding_function (wrong kwarg)
-            persist_directory=CHROMA_DIR
-        )
+    # Always clean up old DB to avoid Rust-binding panics from stale/incompatible data
+    if os.path.exists(CHROMA_DIR):
+        shutil.rmtree(CHROMA_DIR)
 
-    vector_store = Chroma(
+    return Chroma.from_documents(
+        documents=docs,
         collection_name=COLLECTION_NAME,
-        embedding_function=embedding,
+        embedding=embedding,
         persist_directory=CHROMA_DIR
     )
-    vector_store.add_documents(docs)
-    return vector_store
 
 
 def load_vector_store() -> Chroma:

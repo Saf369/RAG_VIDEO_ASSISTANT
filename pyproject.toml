@@ -1,8 +1,7 @@
 [project]
 name = "ai-rag-prompteng"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI Video Assistant — Transcribe, summarize, and query YouTube videos with AI"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = []
-
