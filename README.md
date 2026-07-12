@@ -6,6 +6,10 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+**🔗 Live Demo:** [saf369-rag-video-assistant-app-zijmva.streamlit.app](https://saf369-rag-video-assistant-app-zijmva.streamlit.app/)
+
+---
+
 ## ✨ Features
 
 - **YouTube Audio Download** — Extracts audio from any YouTube video via `yt-dlp`
@@ -103,13 +107,13 @@ streamlit run app.py
 
 ## 🔑 Environment Variables
 
-| Variable          | Required | Description                          |
-| ----------------- | -------- | ------------------------------------ |
-| `MISTRAL_API_KEY` | ✅       | Mistral AI API key for LLM calls     |
-| `SARVAM_API`      | ✅       | Sarvam AI API key for speech-to-text |
-| `SARVAM_STT_MODEL`| ✅       | Sarvam STT model name (e.g. `saaras:v3`) |
-| `WHISPER_MODEL`   | ❌       | Whisper model size (default: `small`)|
-| `CHROMA_DIR`      | ❌       | ChromaDB storage path (default: `vector_db`) |
+| Variable           | Required | Description                                |
+| ------------------ | -------- | ------------------------------------------- |
+| `MISTRAL_API_KEY`  | ✅       | Mistral AI API key for LLM calls            |
+| `SARVAM_API`       | ✅       | Sarvam AI API key for speech-to-text        |
+| `SARVAM_STT_MODEL` | ✅       | Sarvam STT model name (e.g. `saaras:v3`)    |
+| `WHISPER_MODEL`    | ❌       | Whisper model size (default: `small`)       |
+| `CHROMA_DIR`       | ❌       | ChromaDB storage path (default: `vector_db`)|
 
 ---
 
@@ -131,10 +135,10 @@ AI_RAG_prompteng/
 │   └── config.toml        # Streamlit theme & server config
 ├── requirements.txt       # Python dependencies
 ├── packages.txt           # System dependencies (for Streamlit Cloud)
-├── Dockerfile             # Container deployment
-├── Procfile               # Heroku/Render/Railway
-├── runtime.txt            # Python version for PaaS platforms
-└── .env.example           # Environment variable template
+├── Dockerfile              # Container deployment
+├── Procfile                # Heroku/Render/Railway
+├── runtime.txt              # Python version for PaaS platforms
+└── .env.example             # Environment variable template
 ```
 
 ---
