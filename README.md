@@ -6,6 +6,8 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+**🔴 Live Demo:** [https://saf369-rag-video-assistant-app-zijmva.streamlit.app/](https://saf369-rag-video-assistant-app-zijmva.streamlit.app/)
+
 ## ✨ Features
 
 - **YouTube Audio Download** — Extracts audio from any YouTube video via `yt-dlp`
